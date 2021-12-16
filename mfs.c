@@ -14,8 +14,8 @@
 #include "common.h"
 /******************** MFS start ********************/
 
-char* server_host = "localhost";
-int server_port = 2000;
+char *server_host;
+int *server_port;
 int online = 0;
 
 int genericRequest(struct DTO req, struct DTO *res) {
@@ -27,8 +27,9 @@ int genericRequest(struct DTO req, struct DTO *res) {
         return -1;
     }
 
-    struct sockaddr_in addr, addr2;
-    int rc = UDP_FillSockAddr(&addr, server_host, server_port);
+	struct sockaddr_in addr, addr2;
+	printf("Hostname: %s, port: %d\n", server_host, *server_port);
+    int rc = UDP_FillSockAddr(&addr, server_host, *server_port);
     if(rc < 0)
     {
         perror("upd_send: failed to find host");
@@ -66,8 +67,10 @@ int genericRequest(struct DTO req, struct DTO *res) {
 
 
 int MFS_Init(char *hostname, int port) {
+	server_host = (char*) malloc(sizeof(char)*4096);
 	strcpy(server_host, hostname);
-	server_port = port;
+	server_port = (int*) malloc(sizeof(int));
+	*server_port = port;
 	return 0;
 }
 

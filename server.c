@@ -720,7 +720,7 @@ void initFS() {
         cr.currentEnd = currPos;
     
         writeCheckpoint(fd);
-        // createRootDir(fd);
+        createRootDir(fd);
         
     } else {
         printf("LOG: File system image found, loading!!\n");
@@ -761,6 +761,7 @@ int server_init(int port, char* image_path) {
     initFS();
     int sd = UDP_Open(port);
     assert(sd > -1);
+    printf("Server runnig on port %d\n", port);
     struct DTO req, res;
     while (1) {
         struct sockaddr_in addr;
