@@ -708,7 +708,7 @@ void initFS() {
     // file does not exist
     if(fd < 0) {
         printf("LOG: File system image not found, creating new!!\n");
-        fd = open(filename, O_RDWR | O_CREAT);
+        fd = open(filename, O_RDWR | O_CREAT, 0777);
         initCheckpoint();
         writeCheckpoint(fd);
     
