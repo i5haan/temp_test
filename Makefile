@@ -8,7 +8,7 @@ server: server.o udp.o
 	$(CC)  -o server server.o udp.o 
 
 client: client.o udp.o
-	$(CC)  -o client client.o udp.o mfs.o
+	$(CC)  -o client client.o udp.o
 
 
 lib: mfs.o udp.o

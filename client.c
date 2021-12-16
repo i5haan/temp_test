@@ -24,6 +24,6 @@ int main(int argc, char *argv[]) {
     // printf("Create: %d\n", MFS_Creat(0, MFS_REGULAR_FILE, "test4"));
     // printf("Lookup: %d\n", MFS_Lookup(0, "test4"));
 
-    MFS_Shutdown();
+    // MFS_Shutdown();
     return 0;
 }
