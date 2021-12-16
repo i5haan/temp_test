@@ -110,10 +110,14 @@ int MFS_Write(int inum, char *buffer, int block){
 	res = (struct DTO*) malloc(sizeof(struct DTO));
 	printf("Client: buffer %s\n", buffer);
 
+	int i;
+	for(i=0; i<MFS_BLOCK_SIZE; i++)
+		req.buffer[i]=buffer[i];
+
 	req.inum = inum;
 	req.request = REQ_WRITE;
 	req.block = block;
-	strcpy(req.buffer, buffer);
+	// strcpy(req.buffer, buffer);
 
 	genericRequest(req, res);
 
