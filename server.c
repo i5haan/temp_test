@@ -795,6 +795,7 @@ int server_init(int port, char* image_path) {
         if( UDP_Read(sd, &s, (char *)&buf_pk, sizeof(UDP_Packet)) < 1)
             continue;
 
+        printf("%d\n", buf_pk.request);
 
         if(buf_pk.request == REQ_LOOKUP){
             printf("Lookup: %d, %s\n", buf_pk.inum, buf_pk.name);
