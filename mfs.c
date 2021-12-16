@@ -28,7 +28,7 @@ int genericRequest(struct DTO req, struct DTO *res) {
     }
 
 	struct sockaddr_in addr, addr2;
-	printf("Hostname: %s, port: %d\n", server_host, *server_port);
+	// printf("Hostname: %s, port: %d\n", server_host, *server_port);
     int rc = UDP_FillSockAddr(&addr, server_host, *server_port);
     if(rc < 0)
     {
@@ -45,14 +45,14 @@ int genericRequest(struct DTO req, struct DTO *res) {
     do {
         FD_ZERO(&rfds);
         FD_SET(sd,&rfds);
-        printf("client:: read payload [size:%d contents:(Req: %d, inum: %d, block: %d, ret: %d, name: %s, buf: %s, stat.size: %d, stat.type: %d)]\n", rc, req.request, req.inum, req.block, req.ret, req.name, req.buffer, req.stat.size, req.stat.type);
+        // printf("client:: read payload [size:%d contents:(Req: %d, inum: %d, block: %d, ret: %d, name: %s, buf: %s, stat.size: %d, stat.type: %d)]\n", rc, req.request, req.inum, req.block, req.ret, req.name, req.buffer, req.stat.size, req.stat.type);
 		
 		UDP_Write(sd, &addr, (char*)&req, sizeof(struct DTO));
         if(select(sd+1, &rfds, NULL, NULL, &tv))
         {
-            printf("client:: wait for reply...\n");
+            // printf("client:: wait for reply...\n");
 			rc = UDP_Read(sd, &addr2, (char*)res, sizeof(struct DTO));
-			printf("client:: got reply [size:%d contents:(%d)\n", rc, res->ret);
+			// printf("client:: got reply [size:%d contents:(%d)\n", rc, res->ret);
             if(rc > 0)
             {
                 UDP_Close(sd);
@@ -76,6 +76,7 @@ int MFS_Init(char *hostname, int port) {
 
 
 int MFS_Lookup(int pinum, char *name){
+	printf("Looking up!!\n");
 	struct DTO req, *res;
 	res = (struct DTO*) malloc(sizeof(struct DTO));
 
