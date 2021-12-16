@@ -554,23 +554,10 @@ int MFS_Lookup(int pinum, char *name) {
         return -1;
     }
 
-    int i;
-    for(i = 0; i < DIRECT_POINTERS; i++) {
-        int j;
-        if(retInode.blocks[i] == -1) {
-            continue;
-        }
-        struct directory dir = readDirAt(fd, retInode.blocks[i]);
-        for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
-            if(strcmp(dir.inums[j].name, name) == 0) {
-                close(fd);
-                return dir.inums[j].inum;
-            }
-        }
-    }
+    struct empty_dir_entry entry = checkNameInInode(fd, retInode, name);
 
     close(fd);
-    return -1;
+    return entry.inum;
 }
 
 int MFS_Stat(int inum, struct MFS_Stat_t *m) {
