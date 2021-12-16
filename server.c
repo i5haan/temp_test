@@ -572,6 +572,7 @@ int _Write(int inum, char *buffer, int block) {
         close(fd);
         return -1;
     }
+    printf("Write buffer: %s\n", buffer);
 
     writeToBlockAtInode(fd, inum, buffer, block);
 
@@ -602,6 +603,8 @@ int _Read(int inum, char *buffer, int block) {
         close(fd);
         return -1;
     }
+
+    printf("Read buffer: %s\n", buffer);
 
     fsync(fd);
     close(fd);
