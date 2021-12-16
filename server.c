@@ -748,9 +748,6 @@ void performActionAndReturn(struct DTO req, struct DTO *res) {
     } else if(req.request == REQ_UNLINK) {
         int r = _Unlink(req.inum, req.name);
         res->ret = r;
-    } else if(req.request == REQ_SHUTDOWN) {
-        _Shutdown();
-        res->ret = 0;
     } else {
         printf("server:: Request type not servable!");
     }
@@ -769,6 +766,11 @@ int server_init(int port, char* image_path) {
         int rc = UDP_Read(sd, &addr, (char*)&req, sizeof(DTO));
         printf("server:: request payload [size:%d contents:(Req: %d, inum: %d, block: %d, ret: %d, name: %s, buf: %s, stat.size: %d, stat.type: %d)]\n", rc, req.request, req.inum, req.block, req.ret, req.name, req.buffer, req.stat.size, req.stat.type);
         if (rc > 0) {
+                if(req.request == REQ_SHUTDOWN) {
+                    res.ret = 0;
+                    rc = UDP_Write(sd, &addr, (char*)&res, sizeof(DTO));
+                    exit(0);
+                }
                 performActionAndReturn(req, &res);
 
                 printf("server:: response payload [size:%d contents:(Req: %d, inum: %d, block: %d, ret: %d, name: %s, buf: %s, stat.size: %d, stat.type: %d)]\n", rc, res.request, res.inum, res.block, res.ret, res.name, res.buffer, res.stat.size, res.stat.type);
