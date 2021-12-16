@@ -313,7 +313,7 @@ int addEntryToDirectory(int fd, char name[MAX_DIR_NAME], int inum,  int pinum) {
 
     int currPos = cr.currentEnd;
     // int j;
-    printf("LOOKUP: %d\n", pInode.blocks[entry.block]);
+    // printf("LOOKUP: %d\n", pInode.blocks[entry.block]);
     strcpy(dir->inums[entry.index].name, name);
     dir->inums[entry.index].inum = inum;
     // for(j = 0; j < dir.numDir; j++) {
@@ -827,7 +827,7 @@ int server_init(int port, char* image_path) {
 
         }
         else if(buf_pk.request == REQ_CREAT){
-            printf("Creat: %d, %d, %s\n", buf_pk.inum,  buf_pk.type, buf_pk.name);
+            // printf("Creat: %d, %d, %s\n", buf_pk.inum,  buf_pk.type, buf_pk.name);
             rx_pk.inum = MFS_Creat(buf_pk.inum, buf_pk.type, buf_pk.name);
             rx_pk.request = REQ_RESPONSE;
             UDP_Write(sd, &s, (char*)&rx_pk, sizeof(UDP_Packet));
