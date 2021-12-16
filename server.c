@@ -218,7 +218,7 @@ struct empty_dir_entry checkNameInInode(int fd, struct inode in, char *name) {
         struct directory d = readDirAt(fd, in.blocks[i]);
         int j;
         for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
-            printf("In list: %s, expected: %s\n", d.inums[j].name, name);
+            // printf("In list: %s, expected: %s\n", d.inums[j].name, name);
             if(strcmp(d.inums[j].name, name) == 0) {
                 return (struct empty_dir_entry) {.block = i, .index = j, .inum = d.inums[j].inum};
             }
