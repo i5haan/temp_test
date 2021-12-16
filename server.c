@@ -521,6 +521,7 @@ int _Lookup(int pinum, char *name) {
 
     struct empty_dir_entry entry = checkNameInInode(fd, retInode, name);
 
+    fsync(fd);
     close(fd);
     return entry.inum;
 }
@@ -542,6 +543,7 @@ int _Stat(int inum, struct __MFS_Stat_t *m) {
     m->type = retInode.type;
     m->size = retInode.size;
 
+    fsync(fd);
     close(fd);
     return 0;
 }
@@ -572,6 +574,7 @@ int _Write(int inum, char *buffer, int block) {
 
     writeToBlockAtInode(fd, inum, buffer, block);
 
+    fsync(fd);
     close(fd);
     return 0;
 }
@@ -599,6 +602,7 @@ int _Read(int inum, char *buffer, int block) {
         return -1;
     }
 
+    fsync(fd);
     close(fd);
     return 0;
 }
@@ -634,6 +638,7 @@ int _Creat(int pinum, int type, char *name) {
         createAndWriteFile(fd, name, pinum);
     }
 
+    fsync(fd);
     close(fd);
     return 0;
 }
@@ -684,7 +689,7 @@ int _Unlink(int pinum, char *name) {
         }
     }
 
-
+    fsync(fd);
     close(fd);
     return 0;
 }
