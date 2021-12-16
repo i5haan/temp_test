@@ -727,6 +727,9 @@ void initFS() {
     
         writeCheckpoint(fd);
         createRootDir(fd);
+        printf("Current end: %d\n", cr.currentEnd);
+        readCheckpoint(fd);
+        printf("Current end: %d\n", cr.currentEnd);
         
     } else {
         printf("LOG: File system image found, loading!!\n");
