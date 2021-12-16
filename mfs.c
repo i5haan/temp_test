@@ -112,7 +112,11 @@ int MFS_Write(int inum, char buffer[MFS_BLOCK_SIZE], int block){
 
 	int i;
 	for(i=0; i < MFS_BLOCK_SIZE; i++)
-		req.buffer[i]=buffer[i];
+		req.buffer[i] = buffer[i];
+
+	for(i=0; i < MFS_BLOCK_SIZE; i++)
+		printf("%c", buffer[i]);
+	printf("\n");
 
 	req.inum = inum;
 	req.request = REQ_WRITE;
