@@ -842,6 +842,7 @@ int server_init(int port, char* image_path) {
             MFS_Shutdown();
         }
         else if(buf_pk.request == REQ_RESPONSE) {
+            printf("Came ere!\n");
             rx_pk.request = REQ_RESPONSE;
             UDP_Write(sd, &s, (char*)&rx_pk, sizeof(UDP_Packet));
         }
