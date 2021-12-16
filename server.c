@@ -720,7 +720,7 @@ void initFS() {
         cr.currentEnd = currPos;
     
         writeCheckpoint(fd);
-        createRootDir(fd);
+        // createRootDir(fd);
         
     } else {
         printf("LOG: File system image found, loading!!\n");
