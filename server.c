@@ -781,6 +781,7 @@ void initFS() {
 // }
 
 int server_init(int port, char* image_path) {
+    filename = (char *) malloc(sizeof(char)*100);
     strcpy(filename, image_path);
     initFS();
     int sd=-1;
