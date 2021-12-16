@@ -691,6 +691,8 @@ int _Unlink(int pinum, char *name) {
 
 int _Shutdown() {
     printf("server:: SHUTDOWN\n");
+    int fd = open(filename, O_RDWR);
+    fsync(fd);
     exit(0);
 }
 
@@ -769,7 +771,7 @@ int server_init(int port, char* image_path) {
                 if(req.request == REQ_SHUTDOWN) {
                     res.ret = 0;
                     rc = UDP_Write(sd, &addr, (char*)&res, sizeof(DTO));
-                    exit(0);
+                    _Shutdown();
                 }
                 performActionAndReturn(req, &res);
 
