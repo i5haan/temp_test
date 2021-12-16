@@ -11,48 +11,14 @@
 #include "udp.h"
 
 #include "mfs.h"
+#include "common.h"
+/******************** MFS start ********************/
 
-#define BUFFER_SIZE      (1000)
+char* server_host = "localhost";
+int server_port = 2000;
+int online = 0;
 
-#define MAX_INODE        (4096)
-#define NUM_INODES       (16)
-#define DIRECT_POINTERS  (14)
-
-#define BLOCK_SIZE       (4096)
-
-#define MAX_DIR_NAME     (28)
-
-#define MFS_DIRECTORY    (0)
-#define MFS_REGULAR_FILE (1)
-
-#define ROOT_INODE_NUM   (0)
-
-enum MFS_REQ {
-    REQ_INIT,
-    REQ_LOOKUP,
-    REQ_STAT,
-    REQ_WRITE,
-    REQ_READ,
-    REQ_CREAT,
-    REQ_UNLINK,
-    REQ_RESPONSE,
-    REQ_SHUTDOWN
-};
-
-typedef struct __UDP_Packet {
-    enum MFS_REQ request;
-
-    int inum;
-    int block;
-    int type;
-
-    char name[MAX_DIR_NAME];
-    char buffer[BLOCK_SIZE];
-    struct __MFS_Stat_t stat;
-} UDP_Packet;
-
-int UDP_Send( UDP_Packet *tx, UDP_Packet *rx, char *hostname, int port)
-{
+int genericRequest(struct DTO req, struct DTO *res) {
 
     int sd = UDP_Open(0);
     if(sd < -1)
@@ -62,7 +28,7 @@ int UDP_Send( UDP_Packet *tx, UDP_Packet *rx, char *hostname, int port)
     }
 
     struct sockaddr_in addr, addr2;
-    int rc = UDP_FillSockAddr(&addr, hostname, port);
+    int rc = UDP_FillSockAddr(&addr, server_host, server_port);
     if(rc < 0)
     {
         perror("upd_send: failed to find host");
@@ -78,10 +44,14 @@ int UDP_Send( UDP_Packet *tx, UDP_Packet *rx, char *hostname, int port)
     do {
         FD_ZERO(&rfds);
         FD_SET(sd,&rfds);
-        UDP_Write(sd, &addr, (char*)tx, sizeof(UDP_Packet));
+        printf("client:: read payload [size:%d contents:(Req: %d, inum: %d, block: %d, ret: %d, name: %s, buf: %s, stat.size: %d, stat.type: %d)]\n", rc, req.request, req.inum, req.block, req.ret, req.name, req.buffer, req.stat.size, req.stat.type);
+		
+		UDP_Write(sd, &addr, (char*)&req, sizeof(struct DTO));
         if(select(sd+1, &rfds, NULL, NULL, &tv))
         {
-            rc = UDP_Read(sd, &addr2, (char*)rx, sizeof(UDP_Packet));
+            printf("client:: wait for reply...\n");
+			rc = UDP_Read(sd, &addr2, (char*)res, sizeof(struct DTO));
+			printf("client:: got reply [size:%d contents:(%d)\n", rc, res->ret);
             if(rc > 0)
             {
                 UDP_Close(sd);
@@ -93,157 +63,111 @@ int UDP_Send( UDP_Packet *tx, UDP_Packet *rx, char *hostname, int port)
     }while(1);
 }
 
-/******************** MFS start ********************/
-
-char* server_host = NULL;
-int server_port = 3000;
-int online = 0;
-
 
 
 int MFS_Init(char *hostname, int port) {
-	server_host = strdup(hostname); /* gw: tbc dubious  */
+	strcpy(server_host, hostname);
 	server_port = port;
-	online = 1;
 	return 0;
 }
 
 
 int MFS_Lookup(int pinum, char *name){
-	if(!online)
-		return -1;
-	
-	if(strlen(name) > 60 || name == NULL)
-		return -1;
+	struct DTO req, *res;
+	res = (struct DTO*) malloc(sizeof(struct DTO));
 
-	UDP_Packet tx;
-	UDP_Packet rx;
+	req.inum = pinum;
+	req.request = REQ_LOOKUP;
+	strcpy(req.name, name);
 
-	tx.inum = pinum;
-	tx.request = REQ_LOOKUP;
 
-	strcpy((char*)&(tx.name), name);
+	genericRequest(req, res);
 
-	if(UDP_Send( &tx, &rx, server_host, server_port) < 0)
-	  return -1;
-	else
-	  return rx.inum;
+	return res->ret;
 }
 
 int MFS_Stat(int inum, MFS_Stat_t *m) {
-	if(!online)
-		return -1;
+	struct DTO req, *res;
+	res = (struct DTO*) malloc(sizeof(struct DTO));
 
-	UDP_Packet tx;
-	tx.inum = inum;
-	tx.request = REQ_STAT;
+	req.inum = inum;
+	req.request = REQ_STAT;
 
+	genericRequest(req, res);
 
-	UDP_Packet rx;
-	if(UDP_Send( &tx, &rx, server_host, server_port) < 0)
-		return -1;
-	m->type = rx.stat.type;
-	m->size = rx.stat.size;
+	m->type = res->stat.type;
+	m->size = res->stat.size;
 
-	return 0;
+	return res->ret;
 }
 
 int MFS_Write(int inum, char *buffer, int block){
-	int i = 0;
-	if(!online)
-		return -1;
-	
-	UDP_Packet tx;
-	UDP_Packet rx;
+	struct DTO req, *res;
+	res = (struct DTO*) malloc(sizeof(struct DTO));
 
-	tx.inum = inum;
+	req.inum = inum;
+	req.request = REQ_WRITE;
+	req.block = block;
+	strcpy(req.buffer, buffer);
 
-	for(i=0; i<MFS_BLOCK_SIZE; i++)
-	  tx.buffer[i]=buffer[i];
+	genericRequest(req, res);
 
-	tx.block = block;
-	tx.request = REQ_WRITE;
-	
-	if(UDP_Send( &tx, &rx, server_host, server_port) < 0)
-		return -1;
-	
-	return rx.inum;
+
+	return res->ret;
 }
 
 int MFS_Read(int inum, char *buffer, int block){
-  int i = 0;
-  if(!online)
-    return -1;
-	
-  UDP_Packet tx;
+	struct DTO req, *res;
+	res = (struct DTO*) malloc(sizeof(struct DTO));
+
+	req.inum = inum;
+	req.request = REQ_READ;
+	req.block = block;
+
+	genericRequest(req, res);
+
+	strcpy(buffer, res->buffer);
 
 
-  tx.inum = inum;
-  tx.block = block;
-  tx.request = REQ_READ;
-
-  UDP_Packet rx;	
-  if(UDP_Send( &tx, &rx, server_host, server_port) < 0)
-    return -1;
-
-  if(rx.inum > -1) {
-    for(i=0; i<MFS_BLOCK_SIZE; i++)
-      buffer[i]=rx.buffer[i];
-  }
-
-	
-  return rx.inum;
+	return res->ret;
 }
 
 int MFS_Creat(int pinum, int type, char *name){
-	if(!online)
-		return -1;
-	
-	//	if(checkName(name) < 0)
-	if(strlen(name) > 60 || name == NULL)
-		return -1;
+	struct DTO req, *res;
+	res = (struct DTO*) malloc(sizeof(struct DTO));
 
-	UDP_Packet tx;
+	req.inum = pinum;
+	req.request = REQ_CREAT;
+	strcpy(req.name, name);
+	req.stat.type = type;
 
-	strcpy(tx.name, name);
-	tx.inum = pinum;
-	tx.type = type;
-	tx.request = REQ_CREAT;
 
-	UDP_Packet rx;	
-	if(UDP_Send( &tx, &rx, server_host, server_port) < 0)
-		return -1;
+	genericRequest(req, res);
 
-	return rx.inum;
+	return res->ret;
 }
 
 int MFS_Unlink(int pinum, char *name){
-	if(!online)
-		return -1;
-	
-	if(strlen(name) > 60 || name == NULL)
-		return -1;
-	
-	UDP_Packet tx;
+	struct DTO req, *res;
+	res = (struct DTO*) malloc(sizeof(struct DTO));
 
-	tx.inum = pinum;
-	tx.request = REQ_UNLINK;
-	strcpy(tx.name, name);
+	req.inum = pinum;
+	req.request = REQ_UNLINK;
+	strcpy(req.name, name);
 
-	UDP_Packet rx;	
-	if(UDP_Send( &tx, &rx,server_host, server_port ) < 0)
-		return -1;
+	genericRequest(req, res);
 
-	return rx.inum;
+	return res->ret;
 }
 
 int MFS_Shutdown(){
-  UDP_Packet tx;
-	tx.request = REQ_SHUTDOWN;
+	struct DTO req, *res;
+	res = (struct DTO*) malloc(sizeof(struct DTO));
 
-	UDP_Packet rx;
-	if(UDP_Send( &tx, &rx,server_host, server_port) < 0)
-		return -1;
-	
+	req.request = REQ_SHUTDOWN;
+
+
+	genericRequest(req, res);
+
 	return 0;
 }

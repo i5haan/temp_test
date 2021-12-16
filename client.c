@@ -1,40 +1,28 @@
 #include <stdio.h>
 #include "udp.h"
-#include "mfs.h"
-
-enum MFS_REQ {
-    REQ_INIT,
-    REQ_LOOKUP,
-    REQ_STAT,
-    REQ_WRITE,
-    REQ_READ,
-    REQ_CREAT,
-    REQ_UNLINK,
-    REQ_RESPONSE,
-    REQ_SHUTDOWN
-  };
-
-#define BUFFER_SIZE (1000)
+// #include "mfs.h"
+#include "common.h"
 
 // client code
 int main(int argc, char *argv[]) {
-    struct sockaddr_in addrSnd, addrRcv;
+    printf("Create: %d\n", MFS_Creat(0, MFS_REGULAR_FILE, "test4"));
+    int inum = MFS_Lookup(0, "test4");
+    printf("Lookup: %d\n", inum);
+    // printf("WRITE: %d\n", MFS_Write(inum, "ishaan", 0));
+    // struct __MFS_Stat_t m;
+    // printf("Stat: %d\n", MFS_Stat(inum, &m));
+    // printf("Stat2: [Size:%d], [Type:%d]\n", m.size, m.type);
 
-    int sd = UDP_Open(20000);
-    int rc = UDP_FillSockAddr(&addrSnd, "localhost", 10000);
+    // char buffer[BLOCK_SIZE];
 
-    char message[BUFFER_SIZE];
-    sprintf(message, "hello world");
+    // printf("READ: %d\n", MFS_Read(inum, buffer, 0));
+    // printf("READ: buffer: [%s]\n", buffer);
 
-    printf("client:: send message [%s]\n", message);
-    rc = UDP_Write(sd, &addrSnd, message, BUFFER_SIZE);
-    if (rc < 0) {
-	printf("client:: failed to send\n");
-	exit(1);
-    }
+    printf("UNLINK: %d\n", MFS_Unlink(0, "test4"));
 
-    printf("client:: wait for reply...\n");
-    rc = UDP_Read(sd, &addrRcv, message, BUFFER_SIZE);
-    printf("client:: got reply [size:%d contents:(%s)\n", rc, message);
+    printf("Lookup: %d\n", MFS_Lookup(0, "test4"));
+    printf("Create: %d\n", MFS_Creat(0, MFS_REGULAR_FILE, "test4"));
+    printf("Lookup: %d\n", MFS_Lookup(0, "test4"));
+
     return 0;
 }

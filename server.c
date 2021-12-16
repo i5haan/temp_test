@@ -9,21 +9,7 @@
 #include <assert.h>
 
 #include "udp.h"
-
-#define BUFFER_SIZE      (1000)
-
-#define MAX_INODE        (4096)
-#define NUM_INODES       (16)
-#define DIRECT_POINTERS  (14)
-
-#define BLOCK_SIZE       (4096)
-
-#define MAX_DIR_NAME     (28)
-
-#define MFS_DIRECTORY    (0)
-#define MFS_REGULAR_FILE (1)
-
-#define ROOT_INODE_NUM   (0)
+#include "common.h"
 
 struct checkpoint_region {
     int currentEnd;
@@ -53,34 +39,10 @@ struct MFS_Stat_t {
     // note: no permissions, access times, etc.
 };
 
-struct __MFS_DirEnt_t {
-    char name[MAX_DIR_NAME];  // up to 28 bytes of name in directory (including \0)
-    int  inum;      // inode number of entry (-1 means entry not used)
-};
-
-enum MFS_REQ {
-    REQ_INIT,
-    REQ_LOOKUP,
-    REQ_STAT,
-    REQ_WRITE,
-    REQ_READ,
-    REQ_CREAT,
-    REQ_UNLINK,
-    REQ_RESPONSE,
-    REQ_SHUTDOWN
-};
-
-typedef struct __UDP_Packet {
-    enum MFS_REQ request;
-
-    int inum;
-    int block;
-    int type;
-
-    char name[MAX_DIR_NAME];
-    char buffer[BLOCK_SIZE];
-    struct MFS_Stat_t stat;
-} UDP_Packet;
+// struct __MFS_DirEnt_t {
+//     char name[MAX_DIR_NAME];  // up to 28 bytes of name in directory (including \0)
+//     int  inum;      // inode number of entry (-1 means entry not used)
+// };
 
 struct directory {
     struct __MFS_DirEnt_t inums[(BLOCK_SIZE - MAX_DIR_NAME) / 32];
@@ -538,11 +500,13 @@ int isDirectoryEmpty(int fd, struct inode in) {
     }
 }
 
-int MFS_Lookup(int pinum, char *name) {
+int _Lookup(int pinum, char *name) {
+    printf("server:: LOOKUP\n");
     int fd = open(filename, O_RDWR);
     int imapNum = pinum / (MAX_INODE/NUM_INODES);
     // check if inode exists 
     if(imaps[imapNum].inodeLoc[pinum % (MAX_INODE/NUM_INODES)] == -1) {
+        printf("server:: LOOKUP :: Err-> pinum not found\n");
         close(fd);
         return -1;
     }
@@ -550,6 +514,7 @@ int MFS_Lookup(int pinum, char *name) {
     struct inode retInode = readInodeAt(fd, imaps[imapNum].inodeLoc[pinum % (MAX_INODE/NUM_INODES)]);
 
     if(retInode.type != MFS_DIRECTORY) {
+        printf("server:: LOOKUP :: Err-> Not a directory\n");
         close(fd);
         return -1;
     }
@@ -560,12 +525,14 @@ int MFS_Lookup(int pinum, char *name) {
     return entry.inum;
 }
 
-int MFS_Stat(int inum, struct MFS_Stat_t *m) {
+int _Stat(int inum, struct __MFS_Stat_t *m) {
+    printf("server:: STAT\n");
     // m = (struct MFS_Stat_t*) malloc(sizeof(struct MFS_Stat_t));
     int fd = open(filename, O_RDWR);
     int imapNum = inum / (MAX_INODE/NUM_INODES);
     // check if inode exists 
     if(imaps[imapNum].inodeLoc[inum % (MAX_INODE/NUM_INODES)] == -1) {
+        printf("server:: STAT :: Err-> inum not found\n");
         close(fd);
         return -1;
     }
@@ -578,11 +545,13 @@ int MFS_Stat(int inum, struct MFS_Stat_t *m) {
     close(fd);
     return 0;
 }
-int MFS_Write(int inum, char *buffer, int block) {
+int _Write(int inum, char *buffer, int block) {
+    printf("server:: WRITE\n");
     int fd = open(filename, O_RDWR);
     int imapNum = inum / (MAX_INODE/NUM_INODES);
     // check if inode exists 
     if(imaps[imapNum].inodeLoc[inum % (MAX_INODE/NUM_INODES)] == -1) {
+        printf("server:: WRITE :: Err-> inum not found\n");
         close(fd);
         return -1;
     }
@@ -590,11 +559,13 @@ int MFS_Write(int inum, char *buffer, int block) {
     struct inode in = readInodeAt(fd, imaps[imapNum].inodeLoc[inum % (MAX_INODE/NUM_INODES)]);
 
     if(in.type != MFS_REGULAR_FILE) {
+        printf("server:: WRITE :: Err-> Not a file\n");
         close(fd);
         return -1;
     }
 
     if(block >= DIRECT_POINTERS || block < 0) {
+        printf("server:: WRITE :: Err-> inum not found\n");
         close(fd);
         return -1;
     }
@@ -605,21 +576,25 @@ int MFS_Write(int inum, char *buffer, int block) {
     return 0;
 }
 
-int MFS_Read(int inum, char *buffer, int block) {
+int _Read(int inum, char *buffer, int block) {
+    printf("server:: READ\n");
     int fd = open(filename, O_RDWR);
     int imapNum = inum / (MAX_INODE/NUM_INODES);
     // check if inode exists 
     if(imaps[imapNum].inodeLoc[inum % (MAX_INODE/NUM_INODES)] == -1) {
+        printf("server:: READ :: Err-> inum not found\n");
         close(fd);
         return -1;
     }
 
     if(block >= DIRECT_POINTERS || block < 0) {
+        printf("server:: WRITE :: Err-> Invalid Block\n");
         close(fd);
         return -1;
     }
 
     if(readFromBlockAtInode(fd, inum, buffer, block) == -1) {
+        printf("server:: WRITE :: Err-> Block empty\n");
         close(fd);
         return -1;
     }
@@ -628,11 +603,13 @@ int MFS_Read(int inum, char *buffer, int block) {
     return 0;
 }
 
-int MFS_Creat(int pinum, int type, char *name) {
+int _Creat(int pinum, int type, char *name) {
+    printf("server:: CREAT\n");
     int fd = open(filename, O_RDWR);
     int imapNum = pinum / (MAX_INODE/NUM_INODES);
     // check if inode exists 
     if(imaps[imapNum].inodeLoc[pinum % (MAX_INODE/NUM_INODES)] == -1) {
+        printf("server:: CREAT :: Err-> pinum not found\n");
         close(fd);
         return -1;
     }
@@ -640,11 +617,13 @@ int MFS_Creat(int pinum, int type, char *name) {
     struct inode pInode = readInodeAt(fd, imaps[imapNum].inodeLoc[pinum % (MAX_INODE/NUM_INODES)]);
 
     if(pInode.type != MFS_DIRECTORY) {
+        printf("server:: CREAT :: Err-> not a dir\n");
         close(fd);
         return -1;
     }
     struct empty_dir_entry entry = checkNameInInode(fd, pInode, name);
     if(entry.inum != -1) {
+        printf("server:: CREAT :: Err-> Already in dir\n");
         close(fd);
         return 0;
     }
@@ -659,15 +638,18 @@ int MFS_Creat(int pinum, int type, char *name) {
     return 0;
 }
 
-int MFS_Unlink(int pinum, char *name) {
+int _Unlink(int pinum, char *name) {
+    printf("server:: UNLINK\n");
     int fd = open(filename, O_RDWR);
     int imapNum = pinum / (MAX_INODE/NUM_INODES);
     if(strcmp(name, ".") == 0 || strcmp(name, "..") == 0) {
+        printf("server:: UNLINK :: Err-> Can't remove . and ..!\n");
         close(fd);
         return -1;
     }
     // check if inode exists 
     if(imaps[imapNum].inodeLoc[pinum % (MAX_INODE/NUM_INODES)] == -1) {
+        printf("server:: UNLINK :: Err-> pinum not found\n");
         close(fd);
         return -1;
     }
@@ -675,12 +657,14 @@ int MFS_Unlink(int pinum, char *name) {
     struct inode pInode = readInodeAt(fd, imaps[imapNum].inodeLoc[pinum % (MAX_INODE/NUM_INODES)]);
 
     if(pInode.type != MFS_DIRECTORY) {
+        printf("server:: CREAT :: Err-> not a dir\n");
         close(fd);
         return -1;
     }
 
     struct empty_dir_entry entry = checkNameInInode(fd, pInode, name);
     if(entry.inum == -1) {
+        printf("server:: CREAT :: Err-> Not found\n");
         close(fd);
         return 0;
     }
@@ -694,6 +678,7 @@ int MFS_Unlink(int pinum, char *name) {
         if(isDirectoryEmpty(fd, pInode) == 0) {
             removeEntryFromDirectory(fd, pInode, pinum, entry.inum, entry);
         } else {
+            printf("server:: CREAT :: Err-> Not empty\n");
             close(fd);
             return -1;
         }
@@ -704,7 +689,8 @@ int MFS_Unlink(int pinum, char *name) {
     return 0;
 }
 
-int MFS_Shutdown() {
+int _Shutdown() {
+    printf("server:: SHUTDOWN\n");
     exit(0);
 }
 
@@ -743,118 +729,53 @@ void initFS() {
     close(fd);
 }
 
-// int main(int argc, char *argv[]) {
-//     filename = (char *) malloc(sizeof(char)*100);
-//     strcpy(filename, "fs_image");
-//     initFS();
-
-//     // struct MFS_Stat_t m;
-
-//     MFS_Creat(0, MFS_REGULAR_FILE, "lolol1");
-
-//     printf("%d\n", MFS_Lookup(0, "lolol1"));
-
-//     printf("%d\n", MFS_Write(1, "ishaan", 0));
-
-//     char *buf = (char*) malloc(BLOCK_SIZE);
-
-//     printf("%d\n", MFS_Read(1, buf, 0));
-//     printf("%s\n", buf);
-
-//     MFS_Unlink(0, "lolol1");
-
-//     printf("%d\n", MFS_Lookup(0, "lolol1"));
-
-//     printf("%d\n", MFS_Creat(0, MFS_REGULAR_FILE, "lolol1"));
-    
-//     printf("%d\n", MFS_Lookup(0, "lolol1"));
-//     // printf("Size: %d, type: %d\n", m.size, m.type);
-
-//     // int i;
-
-//     // for(i = 0; i < MAX_INODE/NUM_INODES; i++) {
-//     //     int j;
-//     //     for(j = 0; j < NUM_INODES; j++) {
-//     //         printf("%d\n", imaps[i].inodeLoc[j]);
-//     //     }
-//     // }
-// }
+void performActionAndReturn(struct DTO req, struct DTO *res) {
+    if(req.request == REQ_CREAT) {
+        int r = _Creat(req.inum, req.stat.type, req.name);
+        res->ret = r;
+    } else if(req.request == REQ_LOOKUP){
+        int r = _Lookup(req.inum, req.name);
+        res->ret = r;
+    } else if(req.request == REQ_STAT) {
+        int r = _Stat(req.inum, &(res->stat));
+        res->ret = r;
+    } else if(req.request == REQ_WRITE) {
+        int r = _Write(req.inum, req.buffer, req.block);
+        res->ret = r;
+    } else if(req.request == REQ_READ) {
+        int r = _Read(req.inum, (res->buffer), req.block);
+        res->ret = r;
+    } else if(req.request == REQ_UNLINK) {
+        int r = _Unlink(req.inum, req.name);
+        res->ret = r;
+    } else if(req.request == REQ_SHUTDOWN) {
+        _Shutdown();
+        res->ret = 0;
+    } else {
+        printf("server:: Request type not servable!");
+    }
+}
 
 int server_init(int port, char* image_path) {
     filename = (char *) malloc(sizeof(char)*100);
     strcpy(filename, image_path);
     initFS();
-    int sd=-1;
-    if((sd =   UDP_Open(port))< 0){
-    perror("server_init: port open fail");
-    return -1;
-    }
-
-
-    struct sockaddr_in s;
-    UDP_Packet buf_pk,  rx_pk;
-
+    int sd = UDP_Open(port);
+    assert(sd > -1);
+    struct DTO req, res;
     while (1) {
-        if( UDP_Read(sd, &s, (char *)&buf_pk, sizeof(UDP_Packet)) < 1)
-            continue;
+        struct sockaddr_in addr;
+        printf("server:: waiting...\n");
+        int rc = UDP_Read(sd, &addr, (char*)&req, sizeof(DTO));
+        printf("server:: request payload [size:%d contents:(Req: %d, inum: %d, block: %d, ret: %d, name: %s, buf: %s, stat.size: %d, stat.type: %d)]\n", rc, req.request, req.inum, req.block, req.ret, req.name, req.buffer, req.stat.size, req.stat.type);
+        if (rc > 0) {
+                performActionAndReturn(req, &res);
 
-        printf("%d\n", buf_pk.request);
-
-        if(buf_pk.request == REQ_LOOKUP){
-            printf("Lookup: %d, %s\n", buf_pk.inum, buf_pk.name);
-            rx_pk.inum = MFS_Lookup(buf_pk.inum, buf_pk.name);
-            // printf("Lookup: %d, %s")
-            rx_pk.request = REQ_RESPONSE;
-            UDP_Write(sd, &s, (char*)&rx_pk, sizeof(UDP_Packet));
-
-        }
-        else if(buf_pk.request == REQ_STAT){
-            rx_pk.inum = MFS_Stat(buf_pk.inum, &(rx_pk.stat));
-            rx_pk.request = REQ_RESPONSE;
-            UDP_Write(sd, &s, (char*)&rx_pk, sizeof(UDP_Packet));
-
-        }
-        else if(buf_pk.request == REQ_WRITE){
-            rx_pk.inum = MFS_Write(buf_pk.inum, buf_pk.buffer, buf_pk.block);
-            rx_pk.request = REQ_RESPONSE;
-            UDP_Write(sd, &s, (char*)&rx_pk, sizeof(UDP_Packet));
-
-        }
-        else if(buf_pk.request == REQ_READ){
-            rx_pk.inum = MFS_Read(buf_pk.inum, rx_pk.buffer, buf_pk.block);
-            rx_pk.request = REQ_RESPONSE;
-            UDP_Write(sd, &s, (char*)&rx_pk, sizeof(UDP_Packet));
-
-        }
-        else if(buf_pk.request == REQ_CREAT){
-            // printf("Creat: %d, %d, %s\n", buf_pk.inum,  buf_pk.type, buf_pk.name);
-            rx_pk.inum = MFS_Creat(buf_pk.inum, buf_pk.type, buf_pk.name);
-            rx_pk.request = REQ_RESPONSE;
-            UDP_Write(sd, &s, (char*)&rx_pk, sizeof(UDP_Packet));
-
-        }
-        else if(buf_pk.request == REQ_UNLINK){
-            rx_pk.inum = MFS_Unlink(buf_pk.inum, buf_pk.name);
-            rx_pk.request = REQ_RESPONSE;
-            UDP_Write(sd, &s, (char*)&rx_pk, sizeof(UDP_Packet));
-
-        }
-        else if(buf_pk.request == REQ_SHUTDOWN) {
-            rx_pk.request = REQ_RESPONSE;
-            UDP_Write(sd, &s, (char*)&rx_pk, sizeof(UDP_Packet));
-            MFS_Shutdown();
-        }
-        else if(buf_pk.request == REQ_RESPONSE) {
-            printf("Came ere!\n");
-            rx_pk.request = REQ_RESPONSE;
-            UDP_Write(sd, &s, (char*)&rx_pk, sizeof(UDP_Packet));
-        }
-        else {
-            perror("server_init: unknown request");
-            return -1;
-        }
-
-
+                printf("server:: response payload [size:%d contents:(Req: %d, inum: %d, block: %d, ret: %d, name: %s, buf: %s, stat.size: %d, stat.type: %d)]\n", rc, res.request, res.inum, res.block, res.ret, res.name, res.buffer, res.stat.size, res.stat.type);
+                
+                rc = UDP_Write(sd, &addr, (char*)&res, sizeof(DTO));
+            printf("server:: reply\n");
+        } 
     }
 
     return 0;
@@ -873,24 +794,46 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+// int main(int argc, char *argv[]) {
+//     filename = (char *) malloc(sizeof(char)*100);
+//     strcpy(filename, "fs_image");
+//     initFS();
+
+//     // struct MFS_Stat_t m;
+
+//     MFS_Creat(0, MFS_REGULAR_FILE, "test");
+
+//     printf("%d\n", MFS_Lookup(0, "test"));
+
+//     // printf("%d\n", MFS_Write(1, "ishaan", 0));
+
+//     // char *buf = (char*) malloc(BLOCK_SIZE);
+
+//     // printf("%d\n", MFS_Read(1, buf, 0));
+//     // printf("%s\n", buf);
+
+//     // MFS_Unlink(0, "lolol1");
+
+//     // printf("%d\n", MFS_Lookup(0, "lolol1"));
+
+//     // printf("%d\n", MFS_Creat(0, MFS_REGULAR_FILE, "lolol1"));
+    
+//     // printf("%d\n", MFS_Lookup(0, "lolol1"));
+//     // printf("Size: %d, type: %d\n", m.size, m.type);
+
+//     // int i;
+
+//     // for(i = 0; i < MAX_INODE/NUM_INODES; i++) {
+//     //     int j;
+//     //     for(j = 0; j < NUM_INODES; j++) {
+//     //         printf("%d\n", imaps[i].inodeLoc[j]);
+//     //     }
+//     // }
+// }
 
 // server code
 // int main(int argc, char *argv[]) {
-//     int sd = UDP_Open(10000);
-//     assert(sd > -1);
-//     while (1) {
-// 	struct sockaddr_in addr;
-// 	char message[BUFFER_SIZE];
-// 	printf("server:: waiting...\n");
-// 	int rc = UDP_Read(sd, &addr, message, BUFFER_SIZE);
-// 	printf("server:: read message [size:%d contents:(%s)]\n", rc, message);
-// 	if (rc > 0) {
-//             char reply[BUFFER_SIZE];
-//             sprintf(reply, "goodbye world");
-//             rc = UDP_Write(sd, &addr, reply, BUFFER_SIZE);
-// 	    printf("server:: reply\n");
-// 	} 
-//     }
+    
 //     return 0; 
 // }
     
