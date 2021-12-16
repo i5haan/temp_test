@@ -781,6 +781,8 @@ void initFS() {
 // }
 
 int server_init(int port, char* image_path) {
+    strcpy(filename, image_path);
+    initFS();
     int sd=-1;
     if((sd =   UDP_Open(port))< 0){
     perror("server_init: port open fail");
