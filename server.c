@@ -797,7 +797,9 @@ int server_init(int port, char* image_path) {
 
 
         if(buf_pk.request == REQ_LOOKUP){
+            printf("Lookup: %d, %s\n", buf_pk.inum, buf_pk.name);
             rx_pk.inum = MFS_Lookup(buf_pk.inum, buf_pk.name);
+            // printf("Lookup: %d, %s")
             rx_pk.request = REQ_RESPONSE;
             UDP_Write(sd, &s, (char*)&rx_pk, sizeof(UDP_Packet));
 
@@ -821,6 +823,7 @@ int server_init(int port, char* image_path) {
 
         }
         else if(buf_pk.request == REQ_CREAT){
+            printf("Creat: %d, %d, %s\n", buf_pk.inum,  buf_pk.type, buf_pk.name);
             rx_pk.inum = MFS_Creat(buf_pk.inum, buf_pk.type, buf_pk.name);
             rx_pk.request = REQ_RESPONSE;
             UDP_Write(sd, &s, (char*)&rx_pk, sizeof(UDP_Packet));
