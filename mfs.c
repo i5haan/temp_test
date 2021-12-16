@@ -108,6 +108,7 @@ int MFS_Stat(int inum, MFS_Stat_t *m) {
 int MFS_Write(int inum, char *buffer, int block){
 	struct DTO req, *res;
 	res = (struct DTO*) malloc(sizeof(struct DTO));
+	printf("Client: buffer %d\n", buffer);
 
 	req.inum = inum;
 	req.request = REQ_WRITE;
