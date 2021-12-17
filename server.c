@@ -558,6 +558,7 @@ int _Lookup(int pinum, char *name) {
         return -1;
     }
     // checkNameInInode(fd, retInode, "tet");
+    // printf("Number of directories: %d\n", isDirectoryEmpty(fd, retInode));
 
     struct empty_dir_entry entry = checkNameInInode(fd, retInode, name);
     
@@ -678,6 +679,11 @@ int _Creat(int pinum, int type, char *name) {
 
     if(pInode.type != MFS_DIRECTORY) {
         printf("server:: CREAT :: Err-> not a dir\n");
+        close(fd);
+        return -1;
+    }
+    if(isDirectoryEmpty(fd, pInode) == (DIRECT_POINTERS * BLOCK_SIZE)/32) {
+        printf("server:: CREAT :: Err-> Directory Full\n");
         close(fd);
         return -1;
     }

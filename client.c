@@ -40,20 +40,21 @@ int main(int argc, char *argv[]) {
     // printf("UNLINK2: %d\n", MFS_Unlink(inum, "testfile"));
     // printf("UNLINK3: %d\n", MFS_Unlink(inum, "testdir"));
 
-    char str[20];
+    // char str[20];
 
-    int i;
-    for(i = 0; i < 1794; i++) {
-        sprintf(str, "%d", i);
-        printf("Create %d: %d\n", i, MFS_Creat(inum, MFS_REGULAR_FILE, str));
-    }
+    // int i;
+    // for(i = 0; i < 1794; i++) {
+    //     sprintf(str, "%d", i);
+    //     printf("Create %d: %d\n", i, MFS_Creat(inum, MFS_REGULAR_FILE, str));
+    // }
 
-    for(i = 0; i < 1794; i++) {
-        sprintf(str, "%d", i);
-        printf("Lookup %d: %d\n", i, MFS_Lookup(inum, str));
-    }
+    // for(i = 0; i < 1794; i++) {
+    //     sprintf(str, "%d", i);
+    //     printf("Lookup %d: %d\n", i, MFS_Lookup(inum, str));
+    // }
 
-    // printf("Lookup %d: %d\n", 1793, MFS_Lookup(inum, "1793"));
+    printf("Create %d: %d\n", 1793, MFS_Creat(inum, MFS_REGULAR_FILE, "1793"));
+    printf("Lookup %d: %d\n", 1793, MFS_Lookup(inum, "1793"));
 
 
     MFS_Shutdown();
