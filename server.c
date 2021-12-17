@@ -543,7 +543,7 @@ int _Stat(int inum, struct __MFS_Stat_t *m) {
     struct inode retInode = readInodeAt(fd, imaps[imapNum].inodeLoc[inum % (MAX_INODE/NUM_INODES)]);
 
     int i;
-    for(i = DIRECT_POINTERS - 1; i >=0 ; i++) {
+    for(i = DIRECT_POINTERS - 1; i >=0 ; i--) {
         if(retInode.blocks[i] != -1) {
             break;
         }
