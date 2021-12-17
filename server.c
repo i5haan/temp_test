@@ -313,6 +313,16 @@ int addEntryToDirectory(int fd, char name[MAX_DIR_NAME], int inum,  int pinum) {
 
 void createAndWriteDir(int fd, char name[MAX_DIR_NAME], int pinum) {
     // get a new inode
+    if(pinum != -1) {
+        int pInodeLoc = imaps[pinum / (MAX_INODE/NUM_INODES)].inodeLoc[pinum % (MAX_INODE/NUM_INODES)];
+    
+        struct inode pInode = readInodeAt(fd, pInodeLoc);
+
+        struct empty_dir_entry entry = getNextEmptyDirEntry(fd, pInode);
+        if(entry.block == -1) {
+            return;
+        }
+    }
     struct inode newInode = createInode(MFS_DIRECTORY);
     newInode.size = BLOCK_SIZE;
     printf("%s\n", name);
@@ -367,6 +377,16 @@ void createAndWriteDir(int fd, char name[MAX_DIR_NAME], int pinum) {
 
 void createAndWriteFile(int fd, char name[MAX_DIR_NAME], int pinum) {
     // get a new inode
+    if(pinum != -1) {
+        int pInodeLoc = imaps[pinum / (MAX_INODE/NUM_INODES)].inodeLoc[pinum % (MAX_INODE/NUM_INODES)];
+    
+        struct inode pInode = readInodeAt(fd, pInodeLoc);
+
+        struct empty_dir_entry entry = getNextEmptyDirEntry(fd, pInode);
+        if(entry.block == -1) {
+            return;
+        }
+    }
     struct inode newInode = createInode(MFS_REGULAR_FILE);
     printf("%s\n", name);
 
@@ -698,7 +718,7 @@ int _Unlink(int pinum, char *name) {
     struct inode pInode = readInodeAt(fd, imaps[imapNum].inodeLoc[pinum % (MAX_INODE/NUM_INODES)]);
 
     if(pInode.type != MFS_DIRECTORY) {
-        printf("server:: CREAT :: Err-> not a dir\n");
+        printf("server:: Ulink :: Err-> not a dir\n");
         close(fd);
         return -1;
     }
@@ -707,7 +727,7 @@ int _Unlink(int pinum, char *name) {
 
     struct empty_dir_entry entry = checkNameInInode(fd, pInode, name);
     if(entry.inum == -1) {
-        printf("server:: CREAT :: Err-> Not found\n");
+        printf("server:: Ulink :: Err-> Not found\n");
         close(fd);
         return 0;
     }
@@ -723,7 +743,7 @@ int _Unlink(int pinum, char *name) {
         if(isDirectoryEmpty(fd, in) == 2) {
             removeEntryFromDirectory(fd, pInode, pinum, entry.inum, entry);
         } else {
-            printf("server:: CREAT :: Err-> Not empty\n");
+            printf("server:: Ulink :: Err-> Not empty\n");
             close(fd);
             return -1;
         }

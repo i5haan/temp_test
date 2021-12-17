@@ -4,28 +4,42 @@
 #include "common.h"
 
 // client code
+
+// def run(self):
+//     self.loadlib()
+//     self.start_server()
+//     self.mfs_init("localhost", self.port)
+
+//     self.creat(ROOT, MFS_DIRECTORY, "testdir")
+//     inum = self.lookup(ROOT, "testdir")
+
+//     self.creat(inum, MFS_REGULAR_FILE, "testfile")
+//     self.lookup(inum, "testfile")
+
+//     r = self.libmfs.MFS_Unlink(ROOT, "testdir")
+//     if r != -1:
+//        raise Failure("MFS_Unlink should fail on non-empty dir")
+
+//     self.unlink(inum, "testfile")
+//     self.unlink(ROOT, "testdir")
+
+//     self.shutdown()
+//     self.server.wait()
+//     self.done()
+
+
 int main(int argc, char *argv[]) {
     MFS_Init("localhost", 5000);
-    printf("Create: %d\n", MFS_Creat(0, MFS_REGULAR_FILE, "0123456789012345678901234567"));
-    int inum = MFS_Lookup(0, "0123456789012345678901234567");
+    printf("Create: %d\n", MFS_Creat(0, MFS_DIRECTORY, "testdir"));
+    int inum = MFS_Lookup(0, "testdir");
     printf("Lookup: %d\n", inum);
-    // printf("Create2: %d\n", MFS_Creat(inum, MFS_REGULAR_FILE, "testfile"));
+    printf("Create2: %d\n", MFS_Creat(inum, MFS_REGULAR_FILE, "testfile"));
+    printf("Lookup2: %d\n", MFS_Lookup(inum, "testfile"));
 
-    // printf("WRITE: %d\n", MFS_Write(inum, "ishaan", 0));
-    // struct __MFS_Stat_t m;
-    // printf("Stat: %d\n", MFS_Stat(inum, &m));
-    // printf("Stat2: [Size:%d], [Type:%d]\n", m.size, m.type);
+    printf("UNLINK: %d\n", MFS_Unlink(0, "testdir"));
+    printf("UNLINK2: %d\n", MFS_Unlink(inum, "testfile"));
+    printf("UNLINK3: %d\n", MFS_Unlink(inum, "testdir"));
 
-    // char buffer[BLOCK_SIZE];
-
-    // printf("READ: %d\n", MFS_Read(inum, buffer, 0));
-    // printf("READ: buffer: [%s]\n", buffer);
-
-    // printf("UNLINK: %d\n", MFS_Unlink(0, "testdir"));
-
-    // printf("Lookup: %d\n", MFS_Lookup(0, "test4"));
-    // printf("Create: %d\n", MFS_Creat(0, MFS_REGULAR_FILE, "test4"));
-    // printf("Lookup: %d\n", MFS_Lookup(0, "test4"));
 
     MFS_Shutdown();
     return 0;
