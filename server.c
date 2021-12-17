@@ -66,15 +66,6 @@ int getNextAvailableInode() {
     return -1;
 }
 
-void writeDataAt2(int fd, char* data, int pos, int size) {
-    lseek(fd, pos, SEEK_SET); // Checkpoint resides at start so, that is where we will start writing
-    int i;
-    for(i=0; i < MFS_BLOCK_SIZE; i++)
-        printf("%c", data[i]);
-    printf("\n");
-    write(fd, data, size);
-}
-
 void writeDataAt(int fd, char* data, int pos, int size) {
     lseek(fd, pos, SEEK_SET); // Checkpoint resides at start so, that is where we will start writing
     write(fd, data, size);
@@ -418,11 +409,8 @@ void writeToBlockAtInode(int fd, int inum, char* buffer, int block) {
         prevFilled = 0;
     }    
     printf("Writing at %d\n", currPos);
-    int i;
-    for(i=0; i < MFS_BLOCK_SIZE; i++)
-        printf("%c", buffer[i]);
-    printf("\n");
-    writeDataAt2(fd, buffer, currPos, BLOCK_SIZE);
+
+    writeDataAt(fd, buffer, currPos, BLOCK_SIZE);
     in.blocks[block] = currPos;
 
     currPos += BLOCK_SIZE;
@@ -585,11 +573,6 @@ int _Write(int inum, char *buffer, int block) {
         close(fd);
         return -1;
     }
-    printf("Write buffer: \n");
-    int i;
-    for(i=0; i < MFS_BLOCK_SIZE; i++)
-        printf("%c", buffer[i]);
-    printf("\n");
 
     writeToBlockAtInode(fd, inum, buffer, block);
 
@@ -622,11 +605,6 @@ int _Read(int inum, char *buffer, int block) {
     }
 
     printf("Read buffer:\n");
-
-    int i;
-    for(i=0; i < MFS_BLOCK_SIZE; i++)
-        printf("%c", buffer[i]);
-    printf("\n");
 
     fsync(fd);
     close(fd);
