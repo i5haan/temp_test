@@ -140,8 +140,12 @@ int MFS_Read(int inum, char *buffer, int block){
 	genericRequest(req, res);
 
 	int i;
+
 	for(i=0; i < MFS_BLOCK_SIZE; i++)
-	buffer[i] = req.buffer[i];
+		printf("%c:%d;", res->buffer[i], i);
+	printf("\n");
+	for(i=0; i < MFS_BLOCK_SIZE; i++)
+		buffer[i] = res->buffer[i];
 
 
 	return res->ret;
