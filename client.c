@@ -6,7 +6,7 @@
 // client code
 int main(int argc, char *argv[]) {
     MFS_Init("localhost", 5000);
-    printf("Create: %d\n", MFS_Creat(0, MFS_REGULAR_FILE, "test4"));
+    printf("Create: %d\n", MFS_Creat(0, MFS_DIRECTORY, "test4"));
     int inum = MFS_Lookup(0, "test4");
     printf("Lookup: %d\n", inum);
     // printf("WRITE: %d\n", MFS_Write(inum, "ishaan", 0));

@@ -505,6 +505,10 @@ int isDirectoryEmpty(int fd, struct inode in) {
         }
         struct directory d = readDirAt(fd, in.blocks[i]);
         int j;
+        // int j;
+        for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
+            printf("In list: %s, inum: %d, index: %d\n", d.inums[j].name, d.inums[j].inum, j);
+        }
         for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
             if(d.inums[j].inum != -1) {
                 count++;
@@ -512,11 +516,7 @@ int isDirectoryEmpty(int fd, struct inode in) {
         }
     }
 
-    if(count == 2) {
-        return 0;
-    } else {
-        return -1;
-    }
+    return count;
 }
 
 int _Lookup(int pinum, char *name) {
@@ -714,7 +714,7 @@ int _Unlink(int pinum, char *name) {
     if(in.type == MFS_REGULAR_FILE) {
         removeEntryFromDirectory(fd, pInode, pinum, entry.inum, entry);
     } else if(in.type == MFS_DIRECTORY) {
-        if(isDirectoryEmpty(fd, pInode) == 0) {
+        if(isDirectoryEmpty(fd, in) == 2) {
             removeEntryFromDirectory(fd, pInode, pinum, entry.inum, entry);
         } else {
             printf("server:: CREAT :: Err-> Not empty\n");
