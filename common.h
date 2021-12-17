@@ -37,7 +37,7 @@ typedef struct DTO {
     int type;
     int ret;
 
-    char name[MAX_DIR_NAME];
+    char name[MAX_DIR_NAME + 5]; // extra 5 chars to catch error
     char buffer[BLOCK_SIZE];
     struct __MFS_Stat_t stat;
 } DTO;

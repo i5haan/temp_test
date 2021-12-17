@@ -638,6 +638,12 @@ int _Read(int inum, char *buffer, int block) {
 }
 
 int _Creat(int pinum, int type, char *name) {
+    int len = strlen(name);
+    printf("Length of string: %d: %d\n", len, MAX_DIR_NAME);
+    if(len >= MAX_DIR_NAME) {
+        printf("server:: CREAT :: Err->Name too long\n");
+        return -1;
+    }
     printf("server:: CREAT\n");
     int fd = open(filename, O_RDWR);
     int imapNum = pinum / (MAX_INODE/NUM_INODES);
