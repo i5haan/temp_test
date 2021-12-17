@@ -608,7 +608,12 @@ int _Read(int inum, char *buffer, int block) {
         return -1;
     }
 
-    printf("Read buffer: %s\n", buffer);
+    printf("Read buffer:\n");
+
+    int i;
+    for(i=0; i < MFS_BLOCK_SIZE; i++)
+        printf("%c", buffer[i]);
+    printf("\n");
 
     fsync(fd);
     close(fd);
