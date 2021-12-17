@@ -91,6 +91,11 @@ void writeDirectoryDataBlockAt(int fd, struct directory *d, int pos) {
     char* data = malloc((sizeof(struct directory)));
     *((struct directory*)data) = *d;
 
+    // int j;
+    // for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
+    //     printf("In list: %s, inum: %d, index: %d\n", d->inums[j].name, d->inums[j].inum, j);
+    // }
+
 
     writeDataAt(fd, data, pos, sizeof(struct directory));
 }
@@ -135,6 +140,7 @@ struct inode readInodeAt(int fd, int pos) {
 struct directory readDirAt(int fd, int pos) {
     char* output = (char*) malloc(sizeof(struct directory));
     readDataAt(fd, output, pos, sizeof(struct directory));
+    printf("Reading directory from: %d\n", pos);
 
     return *(struct directory*) (output);
 }
@@ -215,11 +221,12 @@ struct empty_dir_entry checkNameInInode(int fd, struct inode in, char *name) {
         if(in.blocks[i] == -1) {
             break;
         }
+        // printf("Block number: %d\n", i);
         struct directory d = readDirAt(fd, in.blocks[i]);
         int j;
         for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
-            // printf("In list: %s, expected: %s\n", d.inums[j].name, name);
-            if(strcmp(d.inums[j].name, name) == 0) {
+            // printf("In list: %s, expected: %s, inum: %d, index: %d\n", d.inums[j].name, name, d.inums[j].inum, j);
+            if(strcmp(d.inums[j].name, name) == 0 && d.inums[j].inum != -1) {
                 return (struct empty_dir_entry) {.block = i, .index = j, .inum = d.inums[j].inum};
             }
         }
@@ -241,7 +248,7 @@ struct empty_dir_entry getNextEmptyDirEntry(int fd, struct inode in) {
         int j;
         for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
             // If we found an entry in an already present block
-            if(d.inums[j].inum -1) {
+            if(d.inums[j].inum == -1) {
                 return (struct empty_dir_entry) { .index = j, .block = i};
             }
         }
@@ -261,6 +268,7 @@ int addEntryToDirectory(int fd, char name[MAX_DIR_NAME], int inum,  int pinum) {
     struct inode pInode = readInodeAt(fd, inodeLoc);
 
     struct empty_dir_entry entry = getNextEmptyDirEntry(fd, pInode);
+    printf("Block: %d, Index: %d\n", entry.block, entry.index);
     struct directory *dir;
     dir = (struct directory*) malloc(sizeof(struct directory));
     if(entry.block == -1) {
@@ -271,7 +279,7 @@ int addEntryToDirectory(int fd, char name[MAX_DIR_NAME], int inum,  int pinum) {
         createDirData(dir);
         entry.index = 0;
     } else {
-        readDirAtPtr(fd, pInode.blocks[entry.block], dir);
+        *dir = readDirAt(fd, pInode.blocks[entry.block]);
     }
 
     int currPos = cr.currentEnd;
@@ -450,27 +458,36 @@ void removeEntryFromDirectory(int fd, struct inode pin, int pinum, int inum, str
 
     struct directory *dir;
     dir = (struct directory*) malloc(sizeof(struct directory));
-    readDirAtPtr(fd, pin.blocks[block], dir);
+    *dir = readDirAt(fd, pin.blocks[block]);
+    // readDirAtPtr(fd, pin.blocks[block], dir);
 
     dir->inums[index].inum = -1;
     strcpy(dir->inums[index].name, "");
+
+    // int j;
+    // for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
+    //     printf("In list: %s, inum: %d, index: %d\n", dir->inums[j].name, dir->inums[j].inum, j);
+    // }
 
 
     int currPos = cr.currentEnd;
 
     writeDirectoryDataBlockAt(fd, dir, currPos);
-
-    pin.blocks[block] = -1;
-
     currPos += sizeof(struct directory);
 
+    pin.blocks[block] = currPos;
+
     writeInodeAt(fd, pin, currPos);
+    imaps[pinum / (MAX_INODE/NUM_INODES)].inodeLoc[pinum % (MAX_INODE/NUM_INODES)] = currPos; // Update location
     imaps[inum / (MAX_INODE/NUM_INODES)].inodeLoc[inum % (MAX_INODE/NUM_INODES)] = -1; // Update location
     
     currPos += sizeof(struct inode);
     // Write Imap
     writeImapAt(fd, imaps[pinum / (MAX_INODE/NUM_INODES)], currPos);
     cr.imapLocs[pinum / (MAX_INODE/NUM_INODES)] = currPos;
+    currPos += sizeof(struct inode_map);
+    writeImapAt(fd, imaps[inum / (MAX_INODE/NUM_INODES)], currPos);
+    cr.imapLocs[inum / (MAX_INODE/NUM_INODES)] = currPos;
 
     currPos += sizeof(struct inode_map);
 
@@ -520,8 +537,10 @@ int _Lookup(int pinum, char *name) {
         close(fd);
         return -1;
     }
+    // checkNameInInode(fd, retInode, "tet");
 
     struct empty_dir_entry entry = checkNameInInode(fd, retInode, name);
+    
 
     fsync(fd);
     close(fd);
@@ -678,12 +697,16 @@ int _Unlink(int pinum, char *name) {
         return -1;
     }
 
+    // checkNameInInode(fd, pInode, "name");
+
     struct empty_dir_entry entry = checkNameInInode(fd, pInode, name);
     if(entry.inum == -1) {
         printf("server:: CREAT :: Err-> Not found\n");
         close(fd);
         return 0;
     }
+
+    printf("Ulink: Block: %d, Index: %d\n", entry.block, entry.index);
 
 
     struct inode in = readInodeAt(fd, imaps[entry.inum / (MAX_INODE/NUM_INODES)].inodeLoc[entry.inum % (MAX_INODE/NUM_INODES)]);
