@@ -114,10 +114,6 @@ int MFS_Write(int inum, char buffer[MFS_BLOCK_SIZE], int block){
 	for(i=0; i < MFS_BLOCK_SIZE; i++)
 		req.buffer[i] = buffer[i];
 
-	for(i=0; i < MFS_BLOCK_SIZE; i++)
-		printf("%c:%d;", buffer[i], i);
-	printf("\n");
-
 	req.inum = inum;
 	req.request = REQ_WRITE;
 	req.block = block;
@@ -140,10 +136,6 @@ int MFS_Read(int inum, char *buffer, int block){
 	genericRequest(req, res);
 
 	int i;
-
-	for(i=0; i < MFS_BLOCK_SIZE; i++)
-		printf("%c:%d;", res->buffer[i], i);
-	printf("\n");
 	for(i=0; i < MFS_BLOCK_SIZE; i++)
 		buffer[i] = res->buffer[i];
 
