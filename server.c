@@ -412,6 +412,7 @@ void writeToBlockAtInode(int fd, int inum, char* buffer, int block) {
         prevFilled = 0;
     }    
     printf("Writing at %d\n", currPos);
+    int i;
     for(i=0; i < MFS_BLOCK_SIZE; i++)
         printf("%c", buffer[i]);
     printf("\n");
