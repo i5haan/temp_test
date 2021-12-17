@@ -33,12 +33,27 @@ int main(int argc, char *argv[]) {
     printf("Create: %d\n", MFS_Creat(0, MFS_DIRECTORY, "testdir"));
     int inum = MFS_Lookup(0, "testdir");
     printf("Lookup: %d\n", inum);
-    printf("Create2: %d\n", MFS_Creat(inum, MFS_REGULAR_FILE, "testfile"));
-    printf("Lookup2: %d\n", MFS_Lookup(inum, "testfile"));
+    // printf("Create2: %d\n", MFS_Creat(inum, MFS_REGULAR_FILE, "testfile"));
+    // printf("Lookup2: %d\n", MFS_Lookup(inum, "testfile"));
 
-    printf("UNLINK: %d\n", MFS_Unlink(0, "testdir"));
-    printf("UNLINK2: %d\n", MFS_Unlink(inum, "testfile"));
-    printf("UNLINK3: %d\n", MFS_Unlink(inum, "testdir"));
+    // printf("UNLINK: %d\n", MFS_Unlink(0, "testdir"));
+    // printf("UNLINK2: %d\n", MFS_Unlink(inum, "testfile"));
+    // printf("UNLINK3: %d\n", MFS_Unlink(inum, "testdir"));
+
+    char str[20];
+
+    int i;
+    for(i = 0; i < 1794; i++) {
+        sprintf(str, "%d", i);
+        printf("Create %d: %d\n", i, MFS_Creat(inum, MFS_REGULAR_FILE, str));
+    }
+
+    for(i = 0; i < 1794; i++) {
+        sprintf(str, "%d", i);
+        printf("Lookup %d: %d\n", i, MFS_Lookup(inum, str));
+    }
+
+    // printf("Lookup %d: %d\n", 1793, MFS_Lookup(inum, "1793"));
 
 
     MFS_Shutdown();

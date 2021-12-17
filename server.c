@@ -45,7 +45,7 @@ struct MFS_Stat_t {
 // };
 
 struct directory {
-    struct __MFS_DirEnt_t inums[(BLOCK_SIZE - MAX_DIR_NAME) / 32];
+    struct __MFS_DirEnt_t inums[(BLOCK_SIZE) / 32];
 };
 
 struct inode_map imaps[MAX_INODE/NUM_INODES];
@@ -209,7 +209,7 @@ struct inode createInode(int type) {
 
 void createDirData(struct directory *dir) {
     int i;
-    for(i = 0; i < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; i++) {
+    for(i = 0; i < (BLOCK_SIZE) / 32; i++) {
         dir->inums[i].inum = -1;
         strcpy(dir->inums[i].name, "");
     }
@@ -224,7 +224,7 @@ struct empty_dir_entry checkNameInInode(int fd, struct inode in, char *name) {
         // printf("Block number: %d\n", i);
         struct directory d = readDirAt(fd, in.blocks[i]);
         int j;
-        for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
+        for(j = 0; j < (BLOCK_SIZE) / 32; j++) {
             // printf("In list: %s, expected: %s, inum: %d, index: %d\n", d.inums[j].name, name, d.inums[j].inum, j);
             if(strcmp(d.inums[j].name, name) == 0 && d.inums[j].inum != -1) {
                 return (struct empty_dir_entry) {.block = i, .index = j, .inum = d.inums[j].inum};
@@ -246,7 +246,7 @@ struct empty_dir_entry getNextEmptyDirEntry(int fd, struct inode in) {
         }
         struct directory d = readDirAt(fd, in.blocks[i]);
         int j;
-        for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
+        for(j = 0; j < (BLOCK_SIZE) / 32; j++) {
             // If we found an entry in an already present block
             if(d.inums[j].inum == -1) {
                 return (struct empty_dir_entry) { .index = j, .block = i};
@@ -526,10 +526,10 @@ int isDirectoryEmpty(int fd, struct inode in) {
         struct directory d = readDirAt(fd, in.blocks[i]);
         int j;
         // int j;
-        for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
+        for(j = 0; j < (BLOCK_SIZE) / 32; j++) {
             printf("In list: %s, inum: %d, index: %d\n", d.inums[j].name, d.inums[j].inum, j);
         }
-        for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
+        for(j = 0; j < (BLOCK_SIZE) / 32; j++) {
             if(d.inums[j].inum != -1) {
                 count++;
             }
