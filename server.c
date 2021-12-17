@@ -572,7 +572,11 @@ int _Write(int inum, char *buffer, int block) {
         close(fd);
         return -1;
     }
-    printf("Write buffer: %s\n", buffer);
+    printf("Write buffer: \n");
+    int i;
+    for(i=0; i < MFS_BLOCK_SIZE; i++)
+        printf("%c", buffer[i]);
+    printf("\n");
 
     writeToBlockAtInode(fd, inum, buffer, block);
 
