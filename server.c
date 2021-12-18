@@ -93,7 +93,7 @@ void writeDirectoryDataBlockAt2(int fd, struct directory *d, int pos) {
 
     int j;
     for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
-        printf("In list: %s, inum: %d, index: %d\n", d->inums[j].name, d->inums[j].inum, j);
+        // printf("In list: %s, inum: %d, index: %d\n", d->inums[j].name, d->inums[j].inum, j);
     }
 
 
