@@ -523,14 +523,15 @@ int isDirectoryEmpty(int fd, struct inode in) {
         if(in.blocks[i] == -1) {
             break;
         }
-        struct directory d = readDirAt(fd, in.blocks[i]);
+        struct directory *d = (struct directory*) malloc(sizeof(struct directory));
+        readDirAtPtr(fd, in.blocks[i], d);
         int j;
         // int j;
         for(j = 0; j < (BLOCK_SIZE) / 32; j++) {
-            // printf("In list: %s, inum: %d, index: %d\n", d.inums[j].name, d.inums[j].inum, j);
+            printf("In list: %s, inum: %d, index: %d\n", d->inums[j].name, d->inums[j].inum, j);
         }
         for(j = 0; j < (BLOCK_SIZE) / 32; j++) {
-            if(d.inums[j].inum != -1) {
+            if(d->inums[j].inum != -1) {
                 count++;
             }
         }
