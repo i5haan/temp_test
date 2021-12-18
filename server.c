@@ -87,6 +87,19 @@ void writeInodeAt(int fd, struct inode i, int pos) {
 //     writeDataAt(fd, data, pos, sizeof(struct directory));
 // }
 
+void writeDirectoryDataBlockAt2(int fd, struct directory *d, int pos) {
+    char* data = malloc((sizeof(struct directory)));
+    *((struct directory*)data) = *d;
+
+    int j;
+    for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
+        printf("In list: %s, inum: %d, index: %d\n", d->inums[j].name, d->inums[j].inum, j);
+    }
+
+
+    writeDataAt(fd, data, pos, sizeof(struct directory));
+}
+
 void writeDirectoryDataBlockAt(int fd, struct directory *d, int pos) {
     char* data = malloc((sizeof(struct directory)));
     *((struct directory*)data) = *d;
@@ -492,7 +505,7 @@ void removeEntryFromDirectory(int fd, struct inode pin, int pinum, int inum, str
 
     int currPos = cr.currentEnd;
 
-    writeDirectoryDataBlockAt(fd, dir, currPos);
+    writeDirectoryDataBlockAt2(fd, dir, currPos);
     currPos += sizeof(struct directory);
 
     pin.blocks[block] = currPos;
@@ -527,10 +540,14 @@ int isDirectoryEmpty(int fd, struct inode in) {
         struct directory d = readDirAt(fd, in.blocks[i]);
         int j;
         // int j;
-        // if it's the first block and the first entry is 
-        for(j = 0; j < (BLOCK_SIZE) / 32; j++) {
-            printf("In list: %s, inum: %d, index: %d\n", d.inums[j].name, d.inums[j].inum, j);
+        // if it's the first block and the first entry is not equal to "."
+        if(i == 0) {
+            printf(". Inode %s\n", d.inums[0].name);
+            printf(".. Inode %s\n", d.inums[1].name);
         }
+        // for(j = 0; j < (BLOCK_SIZE) / 32; j++) {
+        //     printf("In list: %s, inum: %d, index: %d\n", d.inums[j].name, d.inums[j].inum, j);
+        // }
         for(j = 0; j < (BLOCK_SIZE) / 32; j++) {
             if(d.inums[j].inum != -1) {
                 count++;
