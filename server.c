@@ -484,10 +484,10 @@ void removeEntryFromDirectory(int fd, struct inode pin, int pinum, int inum, str
     dir->inums[index].inum = -1;
     strcpy(dir->inums[index].name, "");
 
-    // int j;
-    // for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
-    //     printf("In list: %s, inum: %d, index: %d\n", dir->inums[j].name, dir->inums[j].inum, j);
-    // }
+    int j;
+    for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
+        printf("In list: %s, inum: %d, index: %d\n", dir->inums[j].name, dir->inums[j].inum, j);
+    }
 
 
     int currPos = cr.currentEnd;
@@ -527,7 +527,7 @@ int isDirectoryEmpty(int fd, struct inode in) {
         int j;
         // int j;
         for(j = 0; j < (BLOCK_SIZE) / 32; j++) {
-            printf("In list: %s, inum: %d, index: %d\n", d.inums[j].name, d.inums[j].inum, j);
+            // printf("In list: %s, inum: %d, index: %d\n", d.inums[j].name, d.inums[j].inum, j);
         }
         for(j = 0; j < (BLOCK_SIZE) / 32; j++) {
             if(d.inums[j].inum != -1) {
