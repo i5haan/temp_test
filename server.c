@@ -527,7 +527,7 @@ int isDirectoryEmpty(int fd, struct inode in) {
         int j;
         // int j;
         for(j = 0; j < (BLOCK_SIZE) / 32; j++) {
-            // printf("In list: %s, inum: %d, index: %d\n", d.inums[j].name, d.inums[j].inum, j);
+            printf("In list: %s, inum: %d, index: %d\n", d.inums[j].name, d.inums[j].inum, j);
         }
         for(j = 0; j < (BLOCK_SIZE) / 32; j++) {
             if(d.inums[j].inum != -1) {
