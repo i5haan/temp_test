@@ -478,8 +478,8 @@ void removeEntryFromDirectory(int fd, struct inode pin, int pinum, int inum, str
 
     struct directory *dir;
     dir = (struct directory*) malloc(sizeof(struct directory));
-    *dir = readDirAt(fd, pin.blocks[block]);
-    // readDirAtPtr(fd, pin.blocks[block], dir);
+    // *dir = readDirAt(fd, pin.blocks[block]);
+    readDirAtPtr(fd, pin.blocks[block], dir);
 
     dir->inums[index].inum = -1;
     strcpy(dir->inums[index].name, "");
