@@ -505,6 +505,7 @@ void removeEntryFromDirectory(int fd, struct inode pin, int pinum, int inum, str
 
     int currPos = cr.currentEnd;
 
+    printf("Remove: Writing directory at %d\n", currPos);
     writeDirectoryDataBlockAt2(fd, dir, currPos);
     currPos += sizeof(struct directory);
 
@@ -537,6 +538,7 @@ int isDirectoryEmpty(int fd, struct inode in) {
         if(in.blocks[i] == -1) {
             break;
         }
+        printf("isdir: Reading directory at %d\n", in.blocks[i]);
         struct directory d = readDirAt(fd, in.blocks[i]);
         int j;
         // int j;
