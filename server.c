@@ -92,9 +92,9 @@ void writeDirectoryDataBlockAt2(int fd, struct directory *d, int pos) {
     *((struct directory*)data) = *d;
 
     int j;
-    for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
-        // printf("In list: %s, inum: %d, index: %d\n", d->inums[j].name, d->inums[j].inum, j);
-    }
+    // for(j = 0; j < (BLOCK_SIZE - MAX_DIR_NAME - 4) / 32; j++) {
+    //     // printf("In list: %s, inum: %d, index: %d\n", d->inums[j].name, d->inums[j].inum, j);
+    // }
 
 
     writeDataAt(fd, data, pos, sizeof(struct directory));
@@ -341,6 +341,7 @@ void createAndWriteDir(int fd, char name[MAX_DIR_NAME], int pinum) {
     printf("%s\n", name);
 
     int newSelfInum = getNextAvailableInode();
+    printf("New INUM(DIR): %d\n", newSelfInum);
     cr.currentInodeNum++; // Next Inode
     int currPos = cr.currentEnd;
     // base data for the directory
@@ -404,6 +405,7 @@ void createAndWriteFile(int fd, char name[MAX_DIR_NAME], int pinum) {
     printf("%s\n", name);
 
     int newSelfInum = getNextAvailableInode();
+    printf("New INUM(FILE): %d\n", newSelfInum);
     cr.currentInodeNum++; // Next Inode
     int currPos = cr.currentEnd;
 
