@@ -507,9 +507,9 @@ void removeEntryFromDirectory(int fd, struct inode pin, int pinum, int inum, str
 
     printf("Remove: Writing directory at %d\n", currPos);
     writeDirectoryDataBlockAt2(fd, dir, currPos);
-    currPos += sizeof(struct directory);
-
     pin.blocks[block] = currPos;
+    
+    currPos += sizeof(struct directory);
 
     writeInodeAt(fd, pin, currPos);
     imaps[pinum / (MAX_INODE/NUM_INODES)].inodeLoc[pinum % (MAX_INODE/NUM_INODES)] = currPos; // Update location
